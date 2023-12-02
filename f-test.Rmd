@@ -1,0 +1,99 @@
+---
+title: "F test"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(AER)
+library(haven)
+library(dplyr)
+library(stargazer)
+library(ggplot2)
+library(patchwork)
+theme_set(theme_classic())
+```
+```{r Prepare the data}
+# Load the data
+psid <- read_dta("20160995_PSID_regready_sept26.dta")
+
+# Reeconding the sex variable and filter the dataset
+psid_cp <- psid %>% 
+  mutate(sex = ifelse(sex == 1, 1, sex),
+         sex = ifelse(sex == 2, 0, sex)) %>%
+  filter(farmer == 0, ft == 1, age >= 25 & age <= 64, annwks >= 26)
+
+# Decrease all the year by 1 unit
+psid_cp$wave <- psid_cp$wave - 1
+
+# Create dataframes
+# Variables list
+human_dummy_variables <- c("ba", "adv", "northeast", "northcentral", "south", 
+                           "white", "black", "hisp")
+human_continuous_variables <- c("yrsftexpfz", "yrsptexpfz", "yrsftexpfzsq", 
+                                "yrsptexpfzsq", "sch")
+full_dummy_variables <- c("miningconstruction", "durables", 
+                          "nondurables", "Transport", "Utilities", "Communications", 
+                          "retailtrade", "wholesaletrade", "finance", "hotelsrestaurants", 
+                          "Medical", "Education", "professional", "publicadmin",
+                          "manager", "business", "financialop", "computer", "architect",
+                          "scientist", "socialworker", "postseceduc", "legaleduc",
+                          "artist", "lawyerphysician", "healthcare", "healthsupport",
+                          "protective", "foodcare", "building", "sales", "officeadmin",
+                          "constructextractinstall", "production",
+                          "wtrgov",
+                          "unjob")
+
+# Dataframe
+unadjusted_df <- psid_cp[, c("sex", "lnrealwg", "wave")]
+human_df <- mutate(unadjusted_df, psid_cp[,c(human_dummy_variables, human_continuous_variables)])
+full_df <- mutate(human_df, psid_cp[, full_dummy_variables])
+
+# Dataframe for plotting
+unadjusted_df_plot <- psid_cp[, c("sex", "lnrealwg", "realhrwage", "degree")]
+human_df_plot <- mutate(unadjusted_df_plot, psid_cp[,c(human_dummy_variables, human_continuous_variables)])
+full_df_plot <- mutate(human_df_plot, psid_cp[, full_dummy_variables])
+
+```
+
+```{r include=FALSE}
+# Linear Regression in 2010
+lm1 <- lm(lnrealwg~.-wave, unadjusted_df, subset = (wave == 2010))
+lm2 <- lm(lnrealwg~.-wave, human_df, subset = (wave == 2010))
+lm3 <- lm(lnrealwg~.-wave, full_df, subset = (wave == 2010))
+```
+
+```{r f-test}
+ft_education <- linearHypothesis(lm3, c("ba=0", "adv=0", "sch=0"), white.adjust = "hc1") 
+ft_region <- linearHypothesis(lm3, c("northeast=0", "northcentral=0", "south=0"), white.adjust = "hc1") 
+ft_race <- linearHypothesis(lm3, c("white=0", "black=0", "hisp=0"), white.adjust = "hc1")
+ft_experience <- linearHypothesis(lm3, c("yrsftexpfz=0", "yrsptexpfz=0", "yrsftexpfzsq=0", 
+                                "yrsptexpfzsq=0"), white.adjust = "hc1")
+
+ft_industry <- linearHypothesis(lm3, c("miningconstruction=0", "durables=0", 
+                          "nondurables=0", "Transport=0", "Utilities=0", "Communications=0", 
+                          "retailtrade=0", "wholesaletrade=0", "finance=0", "hotelsrestaurants=0", 
+                          "Medical=0", "Education=0", "professional=0", "publicadmin=0"), white.adjust = "hc1")
+ft_region <- linearHypothesis(lm3, c("northeast=0", "northcentral=0", "south=0"), white.adjust = "hc1") 
+
+ft_occupation <- linearHypothesis(lm3, c("manager=0", "business=0", "financialop=0", "computer=0", "architect=0",
+                          "scientist=0", "socialworker=0", "postseceduc=0", "legaleduc=0",
+                          "artist=0", "lawyerphysician=0", "healthcare=0", "healthsupport=0",
+                          "protective=0", "foodcare=0", "building=0", "sales=0", "officeadmin=0",
+                          "constructextractinstall=0", "production=0"), white.adjust = "hc1")
+
+
+print("ft_education")                        
+print(ft_education)
+print("ft_experience")
+print(ft_experience)
+print("ft_region")
+print(ft_region)
+print("ft_race")
+print(ft_race)
+print("ft_industry")
+print(ft_industry)
+print("ft_occupation")
+print(ft_occupation)
+```
