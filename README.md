@@ -1,2 +1,2 @@
-# Gender-Wage-Gap-
-Use econometrics model to analyze the correlation between gender and wage.
+# Abstract 
+This paper investigates the impacts of various factors in determining wages, emphasizing whether gender is the only attribute of the gender wage gap. Using the Panel Study Income Dynamics (PSID), we conduct three econometric specification models and the log-linear regression to test if surveyed factors are statistically significant in earnings and specifically run the F-test to test if occupations and industries are good indicators of earnings. The study finds out that gender, levels of education, years of experience, region, occupation, industry, and unionization play an important role in setting wages. On the other hand, race does not emerge as a significant indicator of earnings. 
